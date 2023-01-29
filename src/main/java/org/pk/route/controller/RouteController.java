@@ -24,20 +24,6 @@ public class RouteController {
     public Route getRouting(@PathVariable("origin") String origin, @PathVariable("destination") String destination) {
         return this.routeService.getRoute(origin, destination);
     }
-
-    @GetMapping("/countries/evict")
-    public void evictCountries() {
-        countryService.evictCountries();
-    }
-
-    @GetMapping("countries/put/{country}")
-    public String putCountry(@PathVariable("country") String country) {
-        return countryService.putCountries(country);
-    }
-
-    @GetMapping("countries/get/{country}")
-    public String getCountry(@PathVariable("country") String country) {
-        return countryService.getCountries2(country);
-    }
+    
 }
 

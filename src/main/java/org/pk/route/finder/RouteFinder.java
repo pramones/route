@@ -1,13 +1,15 @@
 package org.pk.route.finder;
 
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.pk.route.exception.CountryNotFoundException;
 import org.pk.route.model.Country;
 import org.pk.route.model.Route;
+import org.pk.route.util.ApplicationUtil;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class RouteFinder {
 
     private final String origin;
@@ -18,13 +20,18 @@ public class RouteFinder {
     private Graph graph;
     private Map<String, Node> nodeByCca3;
 
+    private boolean cached;
+    private RouteCacheStorage cacheStorage;
+
     @Builder
-    public RouteFinder(String origin, String destination, List<Country> countries) {
+    public RouteFinder(String origin, String destination,
+                       List<Country> countries, boolean cached, RouteCacheStorage cacheStorage) {
         this.origin = origin;
         this.destination = destination;
+        this.cached = cached;
+        this.cacheStorage = cacheStorage;
         buildGraph(countries);
     }
-
 
     public void buildGraph(final List<Country> counties) {
         nodeByCca3 = new HashMap<>(counties.size());
@@ -53,13 +60,43 @@ public class RouteFinder {
     }
 
     public Optional<Route> findRoute() {
-        calculateDistances(originNode);
-        if (destinationNode.getDistance() < Integer.MAX_VALUE) {
-            Route route = new Route(destinationNode.asString());
-            return Optional.of(route);
-        } else {
-            return Optional.empty();
+        Optional<Route> cachedRoute = null;
+        if (cached && cacheStorage != null) {
+            cachedRoute = fromCache();
         }
+        if (cachedRoute != null) {
+            log.info("Cache Hit:", cachedRoute);
+            return cachedRoute;
+        } else {
+            log.info("Cache Miss:", cachedRoute);
+            calculateDistances(originNode);
+            if (cacheStorage != null) cacheGraph();
+            if (destinationNode.getDistance() < Integer.MAX_VALUE) {
+                Route route = new Route(destinationNode.asString());
+                return Optional.of(route);
+            } else {
+                return Optional.empty();
+            }
+        }
+    }
+
+    protected Optional<Route> fromCache() {
+        return cacheStorage.getIfPresent(ApplicationUtil.routeCacheKey(origin, destination));
+    }
+
+    protected void cacheGraph() {
+        String origin = originNode.getCca3();
+        graph.getNodes().stream()
+                .forEach((node) -> {
+                    if (node.getDistance() < Integer.MAX_VALUE) {
+                        Route route = new Route(node.asString());
+                        cacheStorage.set(ApplicationUtil.routeCacheKey(
+                                origin, node.getCca3()), Optional.of(route));
+                    } else {
+                        cacheStorage.set(ApplicationUtil.routeCacheKey(
+                                origin, node.getCca3()), Optional.empty());
+                    }
+                });
     }
 
     public void calculateDistances(Node originNode) {

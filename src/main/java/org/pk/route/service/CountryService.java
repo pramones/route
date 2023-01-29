@@ -7,7 +7,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,24 +28,18 @@ public class CountryService {
 
     private final RestTemplate restTemplate;
 
-    @Autowired
-    private CacheManager cacheManager;
-
     public CountryService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    @Cacheable(value = COUNTRIES_CACHE, key = "#root.target")
+    @Cacheable(value = COUNTRIES_CACHE)
     public Optional<List<Country>> getCountries() {
         log.debug("Retrieving countries [{}] ", API_COUNTRIES);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        HttpEntity<?> httpEntity = new HttpEntity<>(null, headers);
+        RequestEntity request = RequestEntity.get(API_COUNTRIES)
+                .accept(MediaType.APPLICATION_JSON)
+                .build();
         ResponseEntity<List<Country>> response = restTemplate.exchange(
-                API_COUNTRIES,
-                HttpMethod.GET,
-                httpEntity,
+                request,
                 new ParameterizedTypeReference<List<Country>>() {
                 }
         );

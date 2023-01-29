@@ -53,5 +53,9 @@ public class ApplicationUtil {
         }
         return null;
     }
+
+    public static String routeCacheKey(String origin, String destination) {
+        return String.format("%s->%s", origin, destination);
+    }
 }
 
