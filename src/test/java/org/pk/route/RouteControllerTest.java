@@ -45,6 +45,7 @@ public class RouteControllerTest {
     public static final String API_ROUTING = "/routing/{from}/{to}";
     public static final String ROUTE_NOT_FOUND = "Route not found";
     public static final String COUNTRY_NOT_FOUND = "Country not found";
+
     private MockMvc mockMvc;
     private MockRestServiceServer mockRestServiceServer;
 
@@ -132,6 +133,5 @@ public class RouteControllerTest {
                 .andRespond(withSuccess(
                         Files.readString(Path.of(ApplicationUtil.getRootPath(), COUNTRIES_JSON_FILE), StandardCharsets.UTF_8),
                         MediaType.APPLICATION_JSON));
-
     }
 }

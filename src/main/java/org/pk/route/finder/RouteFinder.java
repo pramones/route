@@ -17,8 +17,6 @@ public class RouteFinder {
     private Node destinationNode;
     private Graph graph;
     private Map<String, Node> nodeByCca3;
-    private final AtomicInteger length = new AtomicInteger(0);
-    private final List<Node> route = new LinkedList<>();
 
     @Builder
     public RouteFinder(String origin, String destination, List<Country> countries) {
@@ -27,28 +25,6 @@ public class RouteFinder {
         buildGraph(countries);
     }
 
-    private static Node findLowestDistanceNode(Set<Node> uncheckedNodes) {
-        Node node = null;
-        int distance = Integer.MAX_VALUE;
-        for (Node uncheckedNode : uncheckedNodes) {
-            int nodeDistance = uncheckedNode.getDistance();
-            if (nodeDistance < distance) {
-                distance = nodeDistance;
-                node = uncheckedNode;
-            }
-        }
-        return node;
-    }
-
-    private static void updateShortestRoute(Node originNode, Node fromNode, Integer distance) {
-        Integer originDistance = originNode.getDistance();
-        if (originDistance + distance < fromNode.getDistance()) {
-            fromNode.setDistance(originDistance + distance);
-            LinkedList<Node> shortestPath = new LinkedList<>(originNode.getShortestPath());
-            shortestPath.add(originNode);
-            fromNode.setShortestPath(shortestPath);
-        }
-    }
 
     public void buildGraph(final List<Country> counties) {
         nodeByCca3 = new HashMap<>(counties.size());
@@ -109,4 +85,26 @@ public class RouteFinder {
         }
     }
 
+    private static Node findLowestDistanceNode(Set<Node> uncheckedNodes) {
+        Node node = null;
+        int distance = Integer.MAX_VALUE;
+        for (Node uncheckedNode : uncheckedNodes) {
+            int nodeDistance = uncheckedNode.getDistance();
+            if (nodeDistance < distance) {
+                distance = nodeDistance;
+                node = uncheckedNode;
+            }
+        }
+        return node;
+    }
+
+    private static void updateShortestRoute(Node originNode, Node fromNode, Integer distance) {
+        Integer originDistance = originNode.getDistance();
+        if (originDistance + distance < fromNode.getDistance()) {
+            fromNode.setDistance(originDistance + distance);
+            LinkedList<Node> shortestPath = new LinkedList<>(originNode.getShortestPath());
+            shortestPath.add(originNode);
+            fromNode.setShortestPath(shortestPath);
+        }
+    }
 }
